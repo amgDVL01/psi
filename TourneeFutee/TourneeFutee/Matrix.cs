@@ -3,46 +3,69 @@
     public class Matrix
     {
         // TODO : ajouter tous les attributs que vous jugerez pertinents 
-
+        List<List<float>> valeurs;
+        int nbRows;
+        int nbColumns;
+        float defaultValue;
 
         /* Crée une matrice de dimensions `nbRows` x `nbColums`.
          * Toutes les cases de cette matrice sont remplies avec `defaultValue`.
          * Lève une ArgumentOutOfRangeException si une des dimensions est négative
          */
-        private float[,] data;
-        private float defaultValue;
-
         public Matrix(int nbRows = 0, int nbColumns = 0, float defaultValue = 0)
         {
             // TODO : implémenter
-            if (nbRows < 0 || nbColumns < 0)
-                throw new ArgumentOutOfRangeException();
+            if (nbRows < 0)
+                throw new ArgumentOutOfRangeException(nameof(nbRows));
 
+            if (nbColumns < 0)
+                throw new ArgumentOutOfRangeException(nameof(nbColumns));
+
+            this.nbRows = nbRows;
+            this.nbColumns = nbColumns;
             this.defaultValue = defaultValue;
-            data = new float[nbRows, nbColumns];
+
+            valeurs = new List<List<float>>(nbRows);
 
             for (int i = 0; i < nbRows; i++)
+            {
+                var row = new List<float>(nbColumns);
                 for (int j = 0; j < nbColumns; j++)
-                    data[i, j] = defaultValue;
+                {
+                    row.Add(defaultValue);
+                }
+                valeurs.Add(row);
+            }
         }
-        public float DefaultValue => defaultValue;
-
-        public int NbRows => data.GetLength(0);
-
-        public int NbColumns => data.GetLength(1);
 
         // Propriété : valeur par défaut utilisée pour remplir les nouvelles cases
         // Lecture seule
-
-
+        public float DefaultValue
+        {
+            get { return defaultValue; } // TODO : implémenter
+                 // pas de set
+        }
 
         // Propriété : nombre de lignes
         // Lecture seule
-
+        public int NbRows
+        {
+            get { return nbRows; } // TODO : implémenter
+                 // pas de set
+        }
 
         // Propriété : nombre de colonnes
         // Lecture seule
+        public int NbColumns
+        {
+            get { return nbColumns; } // TODO : implémenter
+                 // pas de set
+        }
 
+        public List<List<float>> Valeurs
+        {
+            get { return valeurs; }
+        }
 
         /* Insère une ligne à l'indice `i`. Décale les lignes suivantes vers le bas.
          * Toutes les cases de la nouvelle ligne contiennent DefaultValue.
@@ -51,26 +74,18 @@
          */
         public void AddRow(int i)
         {
-            if (i < 0 || i > NbRows)
-                throw new ArgumentOutOfRangeException();
+            // TODO : implémenter
+            if (i < 0 || i > nbRows) throw new ArgumentOutOfRangeException(nameof(i));
 
-            float[,] newData = new float[NbRows + 1, NbColumns];
-
-            for (int r = 0; r < NbRows + 1; r++)
+            var newRow = new List<float>(nbColumns);
+            for (int j = 0; j < nbColumns; j++)
             {
-                for (int c = 0; c < NbColumns; c++)
-                {
-                    if (r < i)
-                        newData[r, c] = data[r, c];
-                    else if (r == i)
-                        newData[r, c] = defaultValue;
-                    else
-                        newData[r, c] = data[r - 1, c];
-                }
+                newRow.Add(defaultValue);
             }
 
-            data = newData;
-            // TODO : implémenter
+            valeurs.Insert(i, newRow);
+
+            nbRows++;
         }
 
         /* Insère une colonne à l'indice `j`. Décale les colonnes suivantes vers la droite.
@@ -80,26 +95,15 @@
          */
         public void AddColumn(int j)
         {
-            if (j < 0 || j > NbColumns)
-                throw new ArgumentOutOfRangeException();
+            // TODO : implémenter
+            if (j < 0 || j > nbColumns) throw new ArgumentOutOfRangeException(nameof(j));
 
-            float[,] newData = new float[NbRows, NbColumns + 1];
-
-            for (int r = 0; r < NbRows; r++)
+            foreach (var row in valeurs)
             {
-                for (int c = 0; c < NbColumns + 1; c++)
-                {
-                    if (c < j)
-                        newData[r, c] = data[r, c];
-                    else if (c == j)
-                        newData[r, c] = defaultValue;
-                    else
-                        newData[r, c] = data[r, c - 1];
-                }
+                row.Insert(j, defaultValue);
             }
 
-            data = newData;
-            // TODO : implémenter
+            nbColumns++;
         }
 
         // Supprime la ligne à l'indice `i`. Décale les lignes suivantes vers le haut.
@@ -107,25 +111,11 @@
         public void RemoveRow(int i)
         {
             // TODO : implémenter
-            if (i < 0 || i >= NbRows)
-                throw new ArgumentOutOfRangeException();
+            if (i < 0 || i >= nbRows) throw new ArgumentOutOfRangeException(nameof(i));
 
-            float[,] newData = new float[NbRows - 1, NbColumns];
+            valeurs.RemoveAt(i);
 
-            for (int r = 0; r < NbRows; r++)
-            {
-                if (r == i) continue;
-
-                for (int c = 0; c < NbColumns; c++)
-                {
-                    if (r < i)
-                        newData[r, c] = data[r, c];
-                    else
-                        newData[r - 1, c] = data[r, c];
-                }
-            }
-
-            data = newData;
+            nbRows--;
         }
 
         // Supprime la colonne à l'indice `j`. Décale les colonnes suivantes vers la gauche.
@@ -133,25 +123,14 @@
         public void RemoveColumn(int j)
         {
             // TODO : implémenter
-            if (j < 0 || j >= NbColumns)
-                throw new ArgumentOutOfRangeException();
+            if (j < 0 || j >= nbColumns) throw new ArgumentOutOfRangeException(nameof(j));
 
-            float[,] newData = new float[NbRows, NbColumns - 1];
-
-            for (int r = 0; r < NbRows; r++)
+            foreach (var row in valeurs)
             {
-                for (int c = 0; c < NbColumns; c++)
-                {
-                    if (c == j) continue;
-
-                    if (c < j)
-                        newData[r, c] = data[r, c];
-                    else
-                        newData[r, c - 1] = data[r, c];
-                }
+                row.RemoveAt(j);
             }
 
-            data = newData;
+            nbColumns--;
         }
 
         // Renvoie la valeur à la ligne `i` et colonne `j`
@@ -159,11 +138,11 @@
         public float GetValue(int i, int j)
         {
             // TODO : implémenter
-            if (i < 0 || i >= NbRows || j < 0 || j >= NbColumns)
-                throw new ArgumentOutOfRangeException();
+            if (i < 0 || i >= nbRows) throw new ArgumentOutOfRangeException(nameof(i));
 
-            return data[i, j];
+            if (j < 0 || j >= nbColumns) throw new ArgumentOutOfRangeException(nameof(j));
 
+            return valeurs[i][j];
         }
 
         // Affecte la valeur à la ligne `i` et colonne `j` à `v`
@@ -171,22 +150,27 @@
         public void SetValue(int i, int j, float v)
         {
             // TODO : implémenter
-            if (i < 0 || i >= NbRows || j < 0 || j >= NbColumns)
-                throw new ArgumentOutOfRangeException();
+            if (i < 0 || i >= nbRows) throw new ArgumentOutOfRangeException(nameof(i));
 
-            data[i, j] = v;
+            if (j < 0 || j >= nbColumns) throw new ArgumentOutOfRangeException(nameof(j));
+
+            valeurs[i][j] = v;
         }
 
         // Affiche la matrice
         public void Print()
         {
             // TODO : implémenter
+            for (int i = 0; i < nbRows; i++)
+            {
+                for (int j = 0; j < nbColumns; j++)
+                {
+                    Console.Write(valeurs[i][j] + "\t");
+                }
+                Console.WriteLine();
+            }
         }
 
-
         // TODO : ajouter toutes les méthodes que vous jugerez pertinentes 
-
     }
-
-
 }
