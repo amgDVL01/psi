@@ -181,17 +181,14 @@
         public float GetEdgeWeight(string sourceName, string destinationName)
         {
             // TODO : implémenter
-            if (!vertexIndices.ContainsKey(sourceName) ||
-                !vertexIndices.ContainsKey(destinationName))
-                throw new ArgumentException();
+            if (!vertexIndices.ContainsKey(sourceName) || !vertexIndices.ContainsKey(destinationName)) throw new ArgumentException();
 
             int i = vertexIndices[sourceName];
             int j = vertexIndices[destinationName];
 
             float weight = adjacencyMatrix.GetValue(i, j);
 
-            if (weight == noEdgeValue)
-                throw new ArgumentException();
+            if (weight == noEdgeValue) throw new ArgumentException();
 
             return weight;
         }
@@ -203,17 +200,14 @@
         public void SetEdgeWeight(string sourceName, string destinationName, float weight)
         {
             // TODO : implémenter
-            if (!vertexIndices.ContainsKey(sourceName) ||
-                !vertexIndices.ContainsKey(destinationName))
-                throw new ArgumentException();
+            if (!vertexIndices.ContainsKey(sourceName) || !vertexIndices.ContainsKey(destinationName)) throw new ArgumentException();
 
             int i = vertexIndices[sourceName];
             int j = vertexIndices[destinationName];
 
             adjacencyMatrix.SetValue(i, j, weight);
 
-            if (!directed)
-                adjacencyMatrix.SetValue(j, i, weight);
+            if (!directed) adjacencyMatrix.SetValue(j, i, weight);
         }
 
         // TODO : ajouter toutes les méthodes que vous jugerez pertinentes 
