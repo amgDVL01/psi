@@ -49,16 +49,16 @@
 
         // Ajoute le sommet de nom `name` et de valeur `value` (0 par défaut) dans le graphe
         // Lève une ArgumentException s'il existe déjà un sommet avec le même nom dans le graphe
-        public void AddVertex(string nom, float valeur = 0)
+        public void AddVertex(string name, float value = 0)
         {
             // TODO : implémenter
 
-            if (vertexIndices.ContainsKey(nom)) throw new ArgumentException();
+            if (vertexIndices.ContainsKey(name)) throw new ArgumentException();
 
             int newIndex = Order;
 
-            vertexIndices[nom] = newIndex;
-            vertexValues[nom] = valeur;
+            vertexIndices[name] = newIndex;
+            vertexValues[name] = value;
 
             adjacencyMatrix.AddRow(newIndex);
             adjacencyMatrix.AddColumn(newIndex);
@@ -67,18 +67,18 @@
 
         // Supprime le sommet de nom `name` du graphe (et tous les arcs associés)
         // Lève une ArgumentException si le sommet n'a pas été trouvé dans le graphe
-        public void RemoveVertex(string nom)
+        public void RemoveVertex(string name)
         {
             // TODO : implémenter
-            if (!vertexIndices.ContainsKey(nom)) throw new ArgumentException();
+            if (!vertexIndices.ContainsKey(name)) throw new ArgumentException();
 
-            int index = vertexIndices[nom];
+            int index = vertexIndices[name];
 
             adjacencyMatrix.RemoveRow(index);
             adjacencyMatrix.RemoveColumn(index);
 
-            vertexIndices.Remove(nom);
-            vertexValues.Remove(nom);
+            vertexIndices.Remove(name);
+            vertexValues.Remove(name);
 
             // Réindexation
             var keys = new List<string>(vertexIndices.Keys);
