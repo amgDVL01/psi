@@ -15,11 +15,9 @@
         public Matrix(int nbRows = 0, int nbColumns = 0, float defaultValue = 0)
         {
             // TODO : implémenter
-            if (nbRows < 0)
-                throw new ArgumentOutOfRangeException(nameof(nbRows));
+            if (nbRows < 0) throw new ArgumentOutOfRangeException(nameof(nbRows));
 
-            if (nbColumns < 0)
-                throw new ArgumentOutOfRangeException(nameof(nbColumns));
+            if (nbColumns < 0) throw new ArgumentOutOfRangeException(nameof(nbColumns));
 
             this.nbRows = nbRows;
             this.nbColumns = nbColumns;
