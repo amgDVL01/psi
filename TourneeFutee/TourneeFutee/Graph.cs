@@ -24,6 +24,15 @@
             vertexIndices = new Dictionary<string, int>();
             vertexValues = new Dictionary<string, float>();
         }
+        public Graph(bool directed, Matrix matrice)
+        {
+            this.directed=directed;
+            this.adjacencyMatrix = matrice;
+            this.noEdgeValue = 0;
+
+            vertexIndices = new Dictionary<string, int>();
+            vertexValues = new Dictionary<string, float>();
+        }
 
 
         // --- Propriétés ---
@@ -43,7 +52,16 @@
         {
             get { return directed; }
         }
-
+        public Matrix AdjacencyMatrix 
+        { 
+            get { return adjacencyMatrix; } 
+            set { adjacencyMatrix = value; } 
+        }
+        public Dictionary<string, int> VertexIndices
+        {
+            get { return vertexIndices; }
+            set { vertexIndices = value; }
+        }
 
         // --- Gestion des sommets ---
 
@@ -211,7 +229,27 @@
         }
 
         // TODO : ajouter toutes les méthodes que vous jugerez pertinentes 
+        public void AfficheSegment(int i, int j)
+        {
 
+            foreach (var vertex in vertexIndices)
+            {
+                if (vertex.Value==i) Console.Write(vertex.Key);
+            }
+            Console.Write(" --> ");
+            foreach (var vertex in vertexIndices)
+            {
+                if (vertex.Value == j) Console.Write(vertex.Key);
+            }
+            Console.Write(" (" + adjacencyMatrix.Valeurs[i][j]+")\n");
+        }
+        public int GetVertexIndice(string name)
+        {
+            // TODO : implémenter
+            if (!vertexIndices.ContainsKey(name)) throw new ArgumentException();
+
+            return vertexIndices[name];
+        }
     }
 
 

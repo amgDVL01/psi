@@ -1,4 +1,6 @@
-﻿namespace TourneeFutee
+﻿using System;
+
+namespace TourneeFutee
 {
     public class Matrix
     {
@@ -35,7 +37,18 @@
                 valeurs.Add(row);
             }
         }
-
+        public Matrix(List<List<float>> liste)
+        {
+            this.nbRows=liste.Count;
+            this.nbColumns = liste[0].Count;
+            this.defaultValue = 0;
+            this.valeurs = liste;
+        }
+        public List<List<float>> Valeurs 
+        { 
+            get { return valeurs; }
+            set { valeurs = value; }
+        }
         // Propriété : valeur par défaut utilisée pour remplir les nouvelles cases
         // Lecture seule
         public float DefaultValue
@@ -58,11 +71,6 @@
         {
             get { return nbColumns; } // TODO : implémenter
                  // pas de set
-        }
-
-        public List<List<float>> Valeurs
-        {
-            get { return valeurs; }
         }
 
         /* Insère une ligne à l'indice `i`. Décale les lignes suivantes vers le bas.
@@ -169,6 +177,55 @@
             }
         }
 
+
+
+
+
+
+
+
         // TODO : ajouter toutes les méthodes que vous jugerez pertinentes 
+        public List<float> GetLigne(int i)
+        {
+            List<float> ligne = new List<float>();
+            foreach (var val in valeurs[i]) ligne.Add(val);
+            return ligne;
+        }
+        public List<float> GetColonne(int i)
+        {
+            List<float> colonne = new List<float>();
+            for (int k = 0; k < nbRows; k++) colonne.Add(valeurs[k][i]);
+            return colonne;
+        }
+        public static float MinListe(List<float> liste)
+        {
+            int i = 0;
+            while (i < liste.Count && liste[i] == float.PositiveInfinity) i++;
+            if (i == liste.Count) throw new ArgumentOutOfRangeException(nameof(i));
+
+            float min = liste[i];
+            for (int j = i; j < liste.Count; j++)
+            {
+                if (liste[j] != float.PositiveInfinity && liste[j] < min)
+                {
+                    min = liste[j];
+                }
+            }
+            return min;
+        }
+        public void SoustraireLigne(int i, float val)
+        {
+            for (int k = 0; k < NbColumns; k++) valeurs[i][k] -= val;
+        }
+        public void SoustraireColonne(int i, float val)
+        {
+            for (int k = 0; k < NbRows; k++) valeurs[k][i] -= val;
+        }
+        public static List<List<float>> ClonerMatrice(Matrix m)
+        {
+            List<List<float>> clone = new List<List<float>>();
+            foreach (var ligne in m.Valeurs) clone.Add(new List<float>(ligne));
+            return clone;
+        }
     }
 }
