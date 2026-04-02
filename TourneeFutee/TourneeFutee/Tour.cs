@@ -1,4 +1,7 @@
 ﻿using System.Text.Json.Serialization.Metadata;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace TourneeFutee
 {
@@ -11,26 +14,26 @@ namespace TourneeFutee
         float cost;
         int nbSegments;
 
-        public Tour (List<(string source,string destination)> segments, Graph graphe)
+        public Tour(List<(string source, string destination)> segments, Graph graphe)
         {
             this.nbSegments = 0;
             this.cost = 0;
             this.graphe = graphe;
-            this.segments=new Dictionary<string, string>();
+            this.segments = new Dictionary<string, string>();
             foreach (var s in segments) AddSegment(s);
         }
         public Tour(List<(string source, string destination)> segments)
         {
             this.nbSegments = 0;
             this.cost = 0;
-            this.graphe = null ;
+            this.graphe = null;
             this.segments = new Dictionary<string, string>();
             foreach (var s in segments) AddSegment(s);
         }
         public Tour(Graph graphe)
         {
             this.segments = new Dictionary<string, string>();
-            this.graphe= graphe;
+            this.graphe = graphe;
             this.nbSegments = 0;
             this.cost = 0;
         }
@@ -42,10 +45,27 @@ namespace TourneeFutee
             this.cost = 0;
         }
         // propriétés
-        public Dictionary<string,string> Segments 
-        { 
-            get { return segments; } 
-            set { segments = value; } 
+        public Dictionary<string, string> Segments
+        {
+            get { return segments; }
+            set
+            {
+                segments = value ?? new Dictionary<string, string>();
+                nbSegments = segments.Count;
+                cost = 0;
+
+                if (graphe != null)
+                {
+                    foreach (var s in segments)
+                    {
+                        try
+                        {
+                            cost += graphe.GetEdgeWeight(s.Key, s.Value);
+                        }
+                        catch { }
+                    }
+                }
+            }
         }
         // Coût total de la tournée
         public float Cost
@@ -70,7 +90,6 @@ namespace TourneeFutee
             return false;   // TODO : implémenter 
         }
 
-
         // Affiche les informations sur la tournée : coût total et trajets
         public void Print()
         {
@@ -80,39 +99,61 @@ namespace TourneeFutee
             Console.WriteLine("coût total : " + cost);
         }
 
-
-
         // TODO : ajouter toutes les méthodes que vous jugerez pertinentes 
         public bool FormsCycle((string source, string destination) segment, int nbCities)
         {
-            AddSegment(segment);
+            if (segments.ContainsKey(segment.source)) return true;
+            if (segments.Values.Contains(segment.destination)) return true;
+
             string depart = segment.source;
             string courant = segment.destination;
             int compteurVilles = 1;
-            while (segments.ContainsKey(courant) && compteurVilles<=nbCities)
+
+            while (segments.ContainsKey(courant) && compteurVilles <= nbCities)
             {
                 courant = segments[courant];
                 compteurVilles++;
+
                 if (courant == depart)
-                {
-                    RemoveSegment(segment);
                     return compteurVilles < nbCities;
-                }
             }
-            RemoveSegment(segment);
+
             return false;
         }
+
         public void AddSegment((string source, string destination) segment)
         {
-            if (!segments.ContainsKey(segment.source))
+            if (segments.ContainsKey(segment.source)) return;
+            if (segments.Values.Contains(segment.destination)) return;
+
+            segments[segment.source] = segment.destination;
+            nbSegments++;
+
+            if (graphe != null)
             {
-                segments[segment.source] = segment.destination;
-                nbSegments++;
+                try
+                {
+                    cost += graphe.GetEdgeWeight(segment.source, segment.destination);
+                }
+                catch { }
             }
         }
+
         public void RemoveSegment((string source, string destination) segment)
         {
-            if (ContainsSegment(segment)) segments.Remove(segment.source);
+            if (!ContainsSegment(segment)) return;
+
+            if (graphe != null)
+            {
+                try
+                {
+                    cost -= graphe.GetEdgeWeight(segment.source, segment.destination);
+                }
+                catch { }
+            }
+
+            segments.Remove(segment.source);
+            nbSegments--;
         }
 
     }
