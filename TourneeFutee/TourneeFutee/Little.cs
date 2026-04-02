@@ -1,4 +1,6 @@
-﻿namespace TourneeFutee
+﻿using System.Collections.Generic;
+
+namespace TourneeFutee
 {
     // Résout le problème de voyageur de commerce défini par le graphe `graph`
     // en utilisant l'algorithme de Little
@@ -21,12 +23,12 @@
         // (c'est à dire le cycle hamiltonien de plus faible coût)
         public Tour ComputeOptimalTour()
         {
-            // TODO : implémenter
 
             return new Tour();
         }
 
-        // --- Méthodes utilitaires réalisant des étapes de l'algorithme de Little
+
+         //--- Méthodes utilitaires réalisant des étapes de l'algorithme de Little
 
 
         // Réduit la matrice `m` et revoie la valeur totale de la réduction
@@ -95,6 +97,15 @@
 
 
         // TODO : ajouter toutes les méthodes que vous jugerez pertinentes 
+        private string GetVertexName(int index)
+        {
+            foreach (var kvp in graph.VertexIndices)
+            {
+                if (kvp.Value == index)
+                    return kvp.Key;
+            }
+            throw new Exception("Indice invalide");
+        }
 
     }
 }

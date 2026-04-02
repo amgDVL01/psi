@@ -50,7 +50,8 @@ namespace TourneeFutee
         // Coût total de la tournée
         public float Cost
         {
-            get { return cost; }    // TODO : implémenter
+            get { return cost; }
+            set { cost = value; }// TODO : implémenter
         }
 
         // Nombre de trajets dans la tournée
@@ -92,7 +93,11 @@ namespace TourneeFutee
             {
                 courant = segments[courant];
                 compteurVilles++;
-                if (courant == depart) return compteurVilles < nbCities;
+                if (courant == depart)
+                {
+                    RemoveSegment(segment);
+                    return compteurVilles < nbCities;
+                }
             }
             RemoveSegment(segment);
             return false;
@@ -103,12 +108,6 @@ namespace TourneeFutee
             {
                 segments[segment.source] = segment.destination;
                 nbSegments++;
-
-                try
-                {
-                    cost += graphe.GetEdgeWeight(segment.source, segment.destination);
-                }
-                catch { }
             }
         }
         public void RemoveSegment((string source, string destination) segment)
