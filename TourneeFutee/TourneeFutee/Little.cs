@@ -12,7 +12,6 @@ namespace TourneeFutee
         Graph graph;
         Matrix mat;
         Tour OptimalTour;
-        
 
         // Instancie le planificateur en spécifiant le graphe modélisant un problème de voyageur de commerce
         public Little(Graph graph)
@@ -20,7 +19,6 @@ namespace TourneeFutee
             // TODO : implémenter
             this.graph = graph;
             this.mat = new Matrix(Matrix.ClonerMatrice(graph.AdjacencyMatrix));
-            this.bestCost = float.PositiveInfinity;
             this.OptimalTour = ComputeOptimalTour();
         }
 
@@ -29,13 +27,9 @@ namespace TourneeFutee
         public Tour ComputeOptimalTour()
         {
             // TODO : implémenter
-            throw new Exception("TEST LITTLE");
 
             List<string> names = GetOrderedVertexNames();
             int n = graph.AdjacencyMatrix.NbRows;
-
-            Console.WriteLine("DEBUG n = " + n);
-            Console.WriteLine("DEBUG names = " + string.Join(",", names));
 
             if (n == 0)
                 return new Tour();
@@ -56,9 +50,6 @@ namespace TourneeFutee
                 ref bestPath
             );
 
-            Console.WriteLine("DEBUG best = " + best);
-            Console.WriteLine("DEBUG bestPath count = " + bestPath.Count);
-
             if (bestPath.Count == 0)
                 return new Tour();
 
@@ -71,10 +62,6 @@ namespace TourneeFutee
             }
 
             segments.Add((names[bestPath[bestPath.Count - 1]], names[bestPath[0]]));
-
-            Console.WriteLine("DEBUG segments count = " + segments.Count);
-            foreach (var s in segments)
-                Console.WriteLine("DEBUG segment = " + s.source + " -> " + s.destination);
 
             Tour t = new Tour(segments);
             t.Cost = best;
