@@ -114,6 +114,7 @@ namespace TourneeFutee
                     {
                         ligneCourante = new List<float>(m.GetLigne(k));
                         ligneCourante.RemoveAt(l);
+
                         colonneCourante = new List<float>(m.GetColonne(l));
                         colonneCourante.RemoveAt(k);
                         regretCourant = SafeMin(ligneCourante) + SafeMin(colonneCourante);

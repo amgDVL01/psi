@@ -1,4 +1,5 @@
-﻿namespace TourneeFutee.Tests
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
+namespace TourneeFutee.Tests
 {
     // Campagne de tests unitaires vérifiant le bon fonctionnement de la classe Matrix
     [TestClass]
