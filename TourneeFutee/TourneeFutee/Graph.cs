@@ -26,14 +26,20 @@
         }
         public Graph(bool directed, Matrix matrice)
         {
-            this.directed=directed;
+            this.directed = directed;
             this.adjacencyMatrix = matrice;
             this.noEdgeValue = 0;
 
             vertexIndices = new Dictionary<string, int>();
             vertexValues = new Dictionary<string, float>();
-        }
 
+            for (int i = 0; i < matrice.Valeurs.Count; i++)
+            {
+                string name = ((char)('A' + i)).ToString();
+                vertexIndices[name] = i;
+                vertexValues[name] = 0;
+            }
+        }
 
         // --- Propriétés ---
 
