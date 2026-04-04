@@ -29,8 +29,7 @@ namespace TourneeFutee
             List<string> names = GetOrderedVertexNames();
             int n = graph.AdjacencyMatrix.Valeurs.Count;
 
-            if (n == 0)
-                return new Tour();
+            if (n == 0) return new Tour();
 
             float best = float.PositiveInfinity;
             List<int> bestPath = new List<int>();
@@ -39,25 +38,13 @@ namespace TourneeFutee
             for (int i = 1; i < n; i++)
                 remaining.Add(i);
 
-            BruteForceRec(
-                0,
-                new List<int> { 0 },
-                remaining,
-                0f,
-                ref best,
-                ref bestPath
-            );
+            BruteForceRec(0,new List<int> { 0 },remaining,0f,ref best,ref bestPath);
 
-            if (bestPath.Count == 0)
-                return new Tour();
+            if (bestPath.Count == 0)return new Tour();
 
-            List<(string source, string destination)> segments =
-                new List<(string source, string destination)>();
+            List<(string source, string destination)> segments = new List<(string source, string destination)>();
 
-            for (int i = 0; i < bestPath.Count - 1; i++)
-            {
-                segments.Add((names[bestPath[i]], names[bestPath[i + 1]]));
-            }
+            for (int i = 0; i < bestPath.Count - 1; i++) segments.Add((names[bestPath[i]], names[bestPath[i + 1]]));
 
             segments.Add((names[bestPath[bestPath.Count - 1]], names[bestPath[0]]));
 
@@ -184,16 +171,9 @@ namespace TourneeFutee
             return min;
         }
 
-        private void BruteForceRec(
-            int current,
-            List<int> currentPath,
-            List<int> remaining,
-            float currentCost,
-            ref float best,
-            ref List<int> bestPath)
+        private void BruteForceRec(int current, List<int> currentPath, List<int> remaining, float currentCost, ref float best, ref List<int> bestPath)
         {
-            if (currentCost >= best)
-                return;
+            if (currentCost >= best) return;
 
             if (remaining.Count == 0)
             {
@@ -217,8 +197,7 @@ namespace TourneeFutee
             {
                 float edgeCost = graph.AdjacencyMatrix.GetValue(current, next);
 
-                if (float.IsPositiveInfinity(edgeCost))
-                    continue;
+                if (float.IsPositiveInfinity(edgeCost)) continue;
 
                 List<int> nextPath = new List<int>(currentPath);
                 nextPath.Add(next);
@@ -226,14 +205,7 @@ namespace TourneeFutee
                 List<int> nextRemaining = new List<int>(remaining);
                 nextRemaining.Remove(next);
 
-                BruteForceRec(
-                    next,
-                    nextPath,
-                    nextRemaining,
-                    currentCost + edgeCost,
-                    ref best,
-                    ref bestPath
-                );
+                BruteForceRec(next, nextPath, nextRemaining, currentCost + edgeCost, ref best, ref bestPath);
             }
         }
     }
