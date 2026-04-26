@@ -44,6 +44,18 @@ namespace TourneeFutee
             this.nbSegments = 0;
             this.cost = 0;
         }
+        public Tour(List<string> sommets, float cout)
+        {
+            this.segments = new Dictionary<string, string>();
+            this.graphe = null;
+            this.nbSegments = 0;
+            this.cost = cout;
+            for (int i = 0; i < sommets.Count - 1; i++)
+            {
+                segments.Add(sommets[i], sommets[i + 1]);
+                nbSegments++;
+            }
+        }
         // propriétés
         public Dictionary<string, string> Segments
         {
@@ -155,6 +167,12 @@ namespace TourneeFutee
             segments.Remove(segment.source);
             nbSegments--;
         }
-
+        public IList<string> vertices()
+        {
+            var verts= new List<string>();
+            foreach (var segment in segments) verts.Add(segment.Key);
+            return verts.AsReadOnly();
+        }
+        public IList<string> Vertices { get { return vertices(); } }
     }
 }
