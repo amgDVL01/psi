@@ -14,7 +14,7 @@
 
         // Contruit un graphe (`directed`=true => orienté)
         // La valeur `noEdgeValue` est le poids modélisant l'absence d'un arc (0 par défaut)
-        public Graph(bool directed, float noEdgeValue = 0)
+        public Graph(bool directed, float noEdgeValue = 0.0f)
         {
             // TODO : implémenter
             this.directed = directed;
@@ -68,7 +68,15 @@
             get { return vertexIndices; }
             set { vertexIndices = value; }
         }
-
+        public Dictionary<string, float> VertexValues
+        {
+            get { return vertexValues; }
+            set { vertexValues = value; }
+        }
+        public float NoEdgeValue
+        {
+            get { return noEdgeValue;}
+        }
         // --- Gestion des sommets ---
 
         // Ajoute le sommet de nom `name` et de valeur `value` (0 par défaut) dans le graphe
@@ -256,7 +264,19 @@
 
             return vertexIndices[name];
         }
+
+        public string GetVertexName(int index)
+        {
+            if (index>=0 && index<vertexIndices.Count)
+            {
+                foreach (var vertex in vertexIndices)
+                {
+                    if (vertex.Value == index) return vertex.Key;
+                }
+            }
+            throw new ArgumentException("index invalide");
+        }
     }
 
-
+    
 }

@@ -37,7 +37,7 @@
             AfficheMatrice(list);
             Console.WriteLine();
 
-            Matrix mat= new Matrix(list);
+            Matrix mat = new Matrix(list);
 
             AfficheListe(mat.GetLigne(0));
             AfficheListe(mat.GetColonne(0));
@@ -59,8 +59,11 @@
             villes.VertexIndices.Add("Woippy", 5);
             Console.WriteLine();
 
-            Console.WriteLine(villes.AdjacencyMatrix.GetValue(5,4));
+            Console.WriteLine(villes.AdjacencyMatrix.GetValue(5, 4));
             villes.AfficheSegment(5, 4);
+
+            // mettre son propre identifiant et mdp pour le test
+            ServicePersistance testbdd = new ServicePersistance("localhost", "tourneefutee", "root", " ");
         }
     }
 }

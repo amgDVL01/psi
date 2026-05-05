@@ -14,6 +14,7 @@ namespace TourneeFutee
         // ─────────────────────────────────────────────────────────────────────
 
         private readonly string _connectionString;
+        private readonly MySqlConnection _connexion;
 
         // TODO : si vous avez besoin de maintenir une connexion ouverte,
         //        ajoutez un attribut MySqlConnection ici.
@@ -39,10 +40,22 @@ namespace TourneeFutee
           // TODO : initialiser et ouvrir la connexion à la base de données
         // Exemple :
             _connectionString = $"server={serverIp};database={dbname};uid={user};pwd={pwd};";
+            _connexion = new MySqlConnection(_connectionString) ;
 
             // TODO : tester la connexion dès la construction
             //        (ouvrir puis fermer une connexion pour valider les paramètres)
-            throw new NotImplementedException("Constructeur non implémenté.");
+            bool connexionReussie = false;
+            try
+            {
+                _connexion.Open();
+                connexionReussie = true;
+            }
+            catch (Exception) { }
+            finally
+            {
+                _connexion.Close();
+            }
+            if (!connexionReussie) throw new NotImplementedException("Constructeur non implémenté.");
         }
 
         // ─────────────────────────────────────────────────────────────────────
@@ -69,6 +82,74 @@ namespace TourneeFutee
             // Exemple pour récupérer l'id généré :
             //   uint id = Convert.ToUInt32(cmd.ExecuteScalar());
 
+            string creerGraphe = "INSERT INTO Graphe(est_oriente) VALUES (@directed);";
+            string ajouterSommet="";
+            string ajouterArc = "";
+            uint id=int.MaxValue;
+            float weight=0;
+            try
+            {
+                _connexion.Open();
+                using (MySqlCommand cmdCreerGraphe = new MySqlCommand(creerGraphe, _connexion))
+                {
+                    cmdCreerGraphe.Parameters.AddWithValue("@directed", g.Directed);
+                    cmdCreerGraphe.ExecuteNonQuery();
+
+                    id = Convert.ToUInt32(cmdCreerGraphe.LastInsertedId);
+                }
+
+                Dictionary<string, uint> vertexIds = new Dictionary<string, uint>();
+                foreach (var sommet in g.VertexValues)
+                {
+                    ajouterSommet = "INSERT INTO Sommet(graphe_id,nom,valeur) VALUES (@id , @name , @value);";
+                    using (MySqlCommand cmdAjtValeur = new MySqlCommand(ajouterSommet, _connexion))
+                    {
+                        cmdAjtValeur.Parameters.AddWithValue("@id", id);
+                        cmdAjtValeur.Parameters.AddWithValue("@name", sommet.Key);
+                        cmdAjtValeur.Parameters.AddWithValue("@value", sommet.Value);
+                        cmdAjtValeur.ExecuteNonQuery();
+
+                        uint sommetId = Convert.ToUInt32(cmdAjtValeur.LastInsertedId);
+
+                        vertexIds[sommet.Key] = sommetId;
+                    }
+                }
+
+                
+                foreach (var sommet1 in g.VertexValues)
+                {
+                    foreach (var sommet2 in g.VertexValues)
+                    {
+                        try
+                        {
+                            weight = g.GetEdgeWeight(sommet1.Key, sommet2.Key);
+                            ajouterArc = "INSERT INTO Arc(graphe_id,sommet_source,sommet_dest,poids) VALUES(@id, @source, @dest, @weight);";
+                            using (MySqlCommand cmdAjtArc = new MySqlCommand(ajouterArc, _connexion))
+                            {
+                                cmdAjtArc.Parameters.AddWithValue("@id", id);
+                                cmdAjtArc.Parameters.AddWithValue("@source", vertexIds[sommet1.Key]);
+                                cmdAjtArc.Parameters.AddWithValue("@dest", vertexIds[sommet2.Key]);
+                                cmdAjtArc.Parameters.AddWithValue("@weight", weight);
+                                cmdAjtArc.ExecuteNonQuery();
+                            }
+
+                        }
+                        catch (ArgumentException)
+                        {
+
+                        }
+                    }
+                }
+            }
+            catch (Exception e) 
+            { 
+                throw; 
+            }
+            finally 
+            { 
+                _connexion.Close();
+            }
+            if (id != int.MaxValue) return id;
             throw new NotImplementedException("SaveGraph non implémenté.");
         }
 
@@ -90,8 +171,82 @@ namespace TourneeFutee
             //   3. SELECT dans Arc WHERE graphe_id = @id -> reconstruire la matrice
             //      d'adjacence en utilisant les correspondances sommet_id <-> indice
 
-            throw new NotImplementedException("LoadGraph non implémenté.");
+            Graph g;
+            try
+            {
+                _connexion.Open();
+
+                // initialiser le graphe
+                string getDirected = "SELECT est_oriente FROM Graphe WHERE id = @id";
+
+                bool directed;
+
+                using (MySqlCommand cmd = new MySqlCommand(getDirected, _connexion))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+                    object result = cmd.ExecuteScalar();
+                    if (result == null) throw new Exception("Graphe introuvable");
+                    directed = Convert.ToBoolean(result);
+                }
+                g = new Graph(directed);
+
+                // ajouter les sommets
+                Dictionary<uint, string> vertexNames = new Dictionary<uint, string>();
+                string getVertices = @"SELECT id, nom, valeur FROM Sommet WHERE graphe_id = @id ORDER BY id";
+                using (MySqlCommand cmd = new MySqlCommand(getVertices, _connexion))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            uint vertexId =Convert.ToUInt32(reader["id"]);
+                            string nom =Convert.ToString(reader["nom"]);
+                            float valeur = 0;
+                            if (reader["valeur"] != DBNull.Value)
+                            {
+                                valeur = Convert.ToSingle(reader["valeur"]);
+                            }
+                            g.AddVertex(nom, valeur);
+                            vertexNames[vertexId] = nom;
+                        }
+                    }
+                }
+
+                // ajouter les arcs
+                string getEdges = @"SELECT sommet_source,sommet_dest,poids FROM Arc WHERE graphe_id = @id";
+
+                using (MySqlCommand cmd = new MySqlCommand(getEdges, _connexion))
+                {
+                    cmd.Parameters.AddWithValue("@id", id);
+
+                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            uint sourceId = Convert.ToUInt32(reader["sommet_source"]);
+                            uint destId = Convert.ToUInt32(reader["sommet_dest"]);
+                            float poids = Convert.ToSingle(reader["poids"]);
+                            string sourceName = vertexNames[sourceId];
+                            string destName = vertexNames[destId];
+                            g.AddEdge(sourceName, destName, poids);
+                        }
+                    }
+                }
+                
+                return g;
+            }
+            catch (Exception)
+            {
+                throw new NotImplementedException("LoadGraph non implémenté.");
+            }       
+            finally
+            {
+                _connexion.Close();
+            }
         }
+                
 
         /// <summary>
         /// Sauvegarde la tournée <paramref name="t"/> (effectuée dans le graphe
@@ -148,6 +303,19 @@ namespace TourneeFutee
             var conn = new MySqlConnection(_connectionString);
             conn.Open();
             return conn;
+        }
+
+        public uint GetVertexId(string name, uint graphId)
+        {
+            string getName = "SELECT id FROM Sommet WHERE nom=@name AND graphe_id=@id;";
+            uint resultat;
+            using (MySqlCommand cmdGetName = new MySqlCommand(getName, _connexion))
+            {
+                cmdGetName.Parameters.AddWithValue("@name", name);
+                cmdGetName.Parameters.AddWithValue("@id", graphId);
+                resultat = Convert.ToUInt32(cmdGetName.ExecuteScalar());
+            }
+            return resultat;
         }
     }
 }
