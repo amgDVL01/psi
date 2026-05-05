@@ -7,6 +7,7 @@ namespace TourneeFutee
     /// Service de persistance permettant de sauvegarder et charger
     /// des graphes et des tournées dans une base de données MySQL.
     /// </summary>
+    /// ServicePersistance
     public class ServicePersistance
     {
         // ─────────────────────────────────────────────────────────────────────
@@ -280,6 +281,7 @@ namespace TourneeFutee
         /// </summary>
         /// <param name="id">Identifiant de la tournée à charger.</param>
         /// <returns>Instance de <see cref="Tour"/> reconstituée.</returns>
+        /// Méthode LoadTour(uint id)
         public Tour LoadTour(uint id)
         {
             // TODO : implémenter le chargement de la tournée
