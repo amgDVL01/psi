@@ -264,17 +264,17 @@
 
             return vertexIndices[name];
         }
-
-        public string GetVertexName(int index)
+        public bool ContainsVertex(string name)
         {
-            if (index>=0 && index<vertexIndices.Count)
+            try
             {
-                foreach (var vertex in vertexIndices)
-                {
-                    if (vertex.Value == index) return vertex.Key;
-                }
+                int test = VertexIndices[name];
+                return true;
             }
-            throw new ArgumentException("index invalide");
+            catch(ArgumentException)
+            {
+                return false;
+            }
         }
     }
 

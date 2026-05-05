@@ -1,5 +1,7 @@
 using System;
+using System.Data;
 using MySql.Data.MySqlClient;
+using MySqlX.XDevAPI.Common;
 
 namespace TourneeFutee
 {
@@ -113,9 +115,7 @@ namespace TourneeFutee
 
                         vertexIds[sommet.Key] = sommetId;
                     }
-                }
-
-                
+                } 
                 foreach (var sommet1 in g.VertexValues)
                 {
                     foreach (var sommet2 in g.VertexValues)
@@ -155,7 +155,7 @@ namespace TourneeFutee
         /// </summary>
         /// <param name="id">Identifiant du graphe à charger.</param>
         /// <returns>Instance de <see cref="Graph"/> reconstituée.</returns>
-        public Graph LoadGraph(uint id)
+        public Graph LoadGraph(uint id, bool open = false)
         {
             // TODO : implémenter le chargement du graphe
             //
@@ -170,17 +170,17 @@ namespace TourneeFutee
             Graph g;
             try
             {
-                _connexion.Open();
+                if(!open) _connexion.Open();
 
                 // initialiser le graphe
                 string getDirected = "SELECT est_oriente FROM Graphe WHERE id = @id";
 
                 bool directed;
 
-                using (MySqlCommand cmd = new MySqlCommand(getDirected, _connexion))
+                using (MySqlCommand cmdGetDirected = new MySqlCommand(getDirected, _connexion))
                 {
-                    cmd.Parameters.AddWithValue("@id", id);
-                    object result = cmd.ExecuteScalar();
+                    cmdGetDirected.Parameters.AddWithValue("@id", id);
+                    object result = cmdGetDirected.ExecuteScalar();
                     if (result == null) throw new Exception("Graphe introuvable");
                     directed = Convert.ToBoolean(result);
                 }
@@ -188,12 +188,12 @@ namespace TourneeFutee
 
                 // ajouter les sommets
                 Dictionary<uint, string> vertexNames = new Dictionary<uint, string>();
-                string getVertices = "SELECT id, nom, valeur FROM Sommet WHERE graphe_id = @id ORDER BY id";
-                using (MySqlCommand cmd = new MySqlCommand(getVertices, _connexion))
+                string getVertex = "SELECT id, nom, valeur FROM Sommet WHERE graphe_id = @id ORDER BY id";
+                using (MySqlCommand cmdGetVertex = new MySqlCommand(getVertex, _connexion))
                 {
-                    cmd.Parameters.AddWithValue("@id", id);
+                    cmdGetVertex.Parameters.AddWithValue("@id", id);
 
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    using (MySqlDataReader reader = cmdGetVertex.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -213,11 +213,11 @@ namespace TourneeFutee
                 // ajouter les arcs
                 string getEdges = @"SELECT sommet_source,sommet_dest,poids FROM Arc WHERE graphe_id = @id";
 
-                using (MySqlCommand cmd = new MySqlCommand(getEdges, _connexion))
+                using (MySqlCommand cmdGetEdges = new MySqlCommand(getEdges, _connexion))
                 {
-                    cmd.Parameters.AddWithValue("@id", id);
+                    cmdGetEdges.Parameters.AddWithValue("@id", id);
 
-                    using (MySqlDataReader reader = cmd.ExecuteReader())
+                    using (MySqlDataReader reader = cmdGetEdges.ExecuteReader())
                     {
                         while (reader.Read())
                         {
@@ -234,12 +234,11 @@ namespace TourneeFutee
                         }
                     }
                 }
-                
                 return g;
             }
             finally
             {
-                _connexion.Close();
+                if(!open) _connexion.Close();
             }
             throw new NotImplementedException("LoadGraph non implémenté.");
         }
@@ -264,12 +263,41 @@ namespace TourneeFutee
             //
             // Attention : conserver l'ordre des étapes est essentiel pour
             //             pouvoir reconstruire la tournée fidèlement au chargement.
-            string addTour = "INSERT INTO Tournee(graphe_id, cout_total) VALUES (@id, @cost);";
-            using (MySqlCommand cmdAddTour = new MySqlCommand(addTour, _connexion))
+            uint id;
+            try
             {
-                cmdAddTour.Parameters.AddWithValue("@id", graphId);
-                cmdAddTour.Parameters.AddWithValue("@cost", t.Cost);
+                _connexion.Open();
+                string addTour = "INSERT INTO Tournee(graphe_id, cout_total) VALUES (@id, @cost);";
+                using (MySqlCommand cmdAddTour = new MySqlCommand(addTour, _connexion))
+                {
+                    cmdAddTour.Parameters.AddWithValue("@id", graphId);
+                    cmdAddTour.Parameters.AddWithValue("@cost", t.Cost);
 
+                    cmdAddTour.ExecuteNonQuery();
+
+                    id = Convert.ToUInt32(cmdAddTour.LastInsertedId);
+                }
+
+                int i = 0;
+                foreach (var edge in t.Segments)
+                {
+                    uint idSommet = GetVertexId(edge.Key,graphId);
+                    string addSommet = "INSERT INTO EtapeTournee(tournee_id,numero_ordre,sommet_id) VALUES(@id,@order,@vertexid)";
+                    using (MySqlCommand cmdAddSommet = new MySqlCommand(addSommet, _connexion))
+                    {
+                        cmdAddSommet.Parameters.AddWithValue("@id", id);
+                        cmdAddSommet.Parameters.AddWithValue("@order", i);
+                        cmdAddSommet.Parameters.AddWithValue("@vertexid", idSommet);
+                        cmdAddSommet.ExecuteNonQuery();
+                    }
+                    i++;
+
+                }
+                return id;
+            }
+            finally
+            {
+                _connexion.Close();
             }
             throw new NotImplementedException("SaveTour non implémenté.");
         }
@@ -289,7 +317,58 @@ namespace TourneeFutee
             //   2. SELECT dans EtapeTournee JOIN Sommet WHERE tournee_id = @id
             //      ORDER BY numero_ordre -> reconstruire la séquence ordonnée de sommets
             //   3. Construire et retourner l'instance Tour
+            Tour t;
+            try
+            {
+                _connexion.Open();
+                float totalCost;
+                uint graphId;
+                Graph g;
+                // initialiser tournee
+                string getTournee = "SELECT cout_total, graphe_id FROM Tournee WHERE id=@id;";
+                using (MySqlCommand cmdGetTournee = new MySqlCommand(getTournee, _connexion))
+                {
+                    cmdGetTournee.Parameters.AddWithValue("@id", id);
 
+                    using (MySqlDataReader reader = cmdGetTournee.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            totalCost = Convert.ToSingle(reader["cout_total"]);
+                            graphId = Convert.ToUInt32(reader["graphe_id"]);
+                        }
+                        else throw new Exception("Tournée introuvable");
+                    }
+                }
+                g = LoadGraph(graphId, true);
+                //t = new Tour(g, totalCost);
+
+                // ajouter sommets
+                List<string> sommets = new List<string>();
+                string getSommet = "SELECT nom FROM Sommet s JOIN EtapeTournee e ON e.sommet_id=s.id WHERE tournee_id=@id ORDER BY numero_ordre";
+                using (MySqlCommand cmdGetSommet = new MySqlCommand(getSommet, _connexion))
+                {
+                    cmdGetSommet.Parameters.AddWithValue("@id", id);
+                    using (MySqlDataReader reader = cmdGetSommet.ExecuteReader())
+                    {
+                        while (reader.Read())
+                        {
+                            sommets.Add(Convert.ToString(reader["nom"]));
+                        }
+                    }
+                }
+                t = new Tour(sommets, totalCost);
+                //for (int i = 0; i < sommets.Count - 1; i++)
+                //{
+                //    t.AddSegment((sommets[i], sommets[i + 1]));
+                //}
+                //t.AddSegment((sommets[sommets.Count - 1], sommets[0]));
+                return t;
+            }
+            finally
+            {
+                _connexion.Close();
+            }
             throw new NotImplementedException("LoadTour non implémenté.");
         }
 
@@ -308,17 +387,45 @@ namespace TourneeFutee
             return conn;
         }
 
-        public uint GetVertexId(string name, uint graphId)
+        private uint GetVertexId(string nom, uint graphId)
         {
-            string getName = "SELECT id FROM Sommet WHERE nom=@name AND graphe_id=@id;";
-            uint resultat;
-            using (MySqlCommand cmdGetName = new MySqlCommand(getName, _connexion))
+            try
             {
-                cmdGetName.Parameters.AddWithValue("@name", name);
-                cmdGetName.Parameters.AddWithValue("@id", graphId);
-                resultat = Convert.ToUInt32(cmdGetName.ExecuteScalar());
+                uint id;
+                string getId = "SELECT id FROM Sommet WHERE nom=@nom AND graphe_id=@graphid";
+                using (MySqlCommand cmdGetId = new MySqlCommand(getId, _connexion))
+                {
+                    cmdGetId.Parameters.AddWithValue("@nom", nom);
+                    cmdGetId.Parameters.AddWithValue("@graphid", graphId);
+                    id = Convert.ToUInt32(cmdGetId.ExecuteScalar());
+                }
+                return id;
             }
-            return resultat;
+            catch(Exception)
+            {
+                throw new ArgumentException ("sommet ou graphe introuvables");
+            }
+        }
+        private string GetVertexName(uint id, uint graphId)
+        {
+            try
+            {
+                object name;
+                string getId = "SELECT nom FROM Sommet WHERE id=@id AND graphe_id=@graphid";
+                using (MySqlCommand cmdGetName = new MySqlCommand(getId, _connexion))
+                {
+                    cmdGetName.Parameters.AddWithValue("@id", id);
+                    cmdGetName.Parameters.AddWithValue("@graphid", graphId);
+                    name = Convert.ToString(cmdGetName.ExecuteScalar());
+                }
+                if (name == null)throw new ArgumentException($"Sommet introuvable : id={id}");
+
+                return Convert.ToString(name);
+            }
+            catch (Exception)
+            {
+                throw new ArgumentException("sommet ou graphe introuvables");
+            }
         }
     }
 }

@@ -13,6 +13,7 @@ namespace TourneeFutee
         Graph? graphe;
         float cost;
         int nbSegments;
+        string depart;
 
         public Tour(List<(string source, string destination)> segments, Graph graphe)
         {
@@ -30,12 +31,12 @@ namespace TourneeFutee
             this.segments = new Dictionary<string, string>();
             foreach (var s in segments) AddSegment(s);
         }
-        public Tour(Graph graphe)
+        public Tour(Graph graphe, float cout=0)
         {
             this.segments = new Dictionary<string, string>();
             this.graphe = graphe;
             this.nbSegments = 0;
-            this.cost = 0;
+            this.cost = cout ;
         }
         public Tour()
         {
@@ -78,6 +79,10 @@ namespace TourneeFutee
                     }
                 }
             }
+        }
+        public string Depart
+        {
+            get { return depart; }
         }
         // Coût total de la tournée
         public float Cost
@@ -135,20 +140,20 @@ namespace TourneeFutee
 
         public void AddSegment((string source, string destination) segment)
         {
-            if (segments.ContainsKey(segment.source)) return;
-            if (segments.Values.Contains(segment.destination)) return;
+            //if (segments.ContainsKey(segment.source)) return;
+            //if (segments.Values.Contains(segment.destination)) return;
 
             segments[segment.source] = segment.destination;
             nbSegments++;
-
-            if (graphe != null)
-            {
-                try
-                {
-                    cost += graphe.GetEdgeWeight(segment.source, segment.destination);
-                }
-                catch { }
-            }
+            
+            //if (graphe != null)
+            //{
+            //    try
+            //    {
+            //        cost += graphe.GetEdgeWeight(segment.source, segment.destination);
+            //    }
+            //    catch { }
+            //}
         }
 
         public void RemoveSegment((string source, string destination) segment)
