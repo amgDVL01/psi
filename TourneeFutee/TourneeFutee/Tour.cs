@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MySqlX.XDevAPI.Common;
 
 namespace TourneeFutee
 {
@@ -51,10 +52,10 @@ namespace TourneeFutee
             this.graphe = null;
             this.nbSegments = 0;
             this.cost = cout;
-            for (int i = 0; i < sommets.Count - 1; i++)
+            this.vertices = sommets;
+            for (int i = 0; i < sommets.Count - 1; i++) 
             {
-                segments.Add(sommets[i], sommets[i + 1]);
-                nbSegments++;
+                AddSegment((sommets[i], sommets[i + 1]));
             }
         }
         // propriétés
@@ -142,7 +143,7 @@ namespace TourneeFutee
         {
             //if (segments.ContainsKey(segment.source)) return;
             //if (segments.Values.Contains(segment.destination)) return;
-
+            if (nbSegments == 0) depart = segment.source;
             segments[segment.source] = segment.destination;
             nbSegments++;
             
@@ -172,12 +173,23 @@ namespace TourneeFutee
             segments.Remove(segment.source);
             nbSegments--;
         }
-        public IList<string> vertices()
+        public IList<string> getVertices()
         {
-            var verts= new List<string>();
-            foreach (var segment in segments) verts.Add(segment.Key);
-            return verts.AsReadOnly();
+            if(vertices == null)
+            {
+                var verts = new List<string>();
+                string current = depart;
+                verts.Add(current);
+                while (segments.ContainsKey(current) && verts.Count <= segments.Count + 1)
+                {
+                    verts.Add(current);
+                    current = segments[depart];
+                }
+                return verts.AsReadOnly();
+            }
+            return vertices.AsReadOnly();
         }
-        public IList<string> Vertices { get { return vertices(); } }
+        IList<string> vertices;
+        public IList<string> Vertices { get { return getVertices(); } }
     }
 }

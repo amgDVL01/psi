@@ -280,9 +280,9 @@ namespace TourneeFutee
                 }
 
                 int i = 0;
-                foreach (var edge in t.Segments)
+                foreach (string sommet in t.Vertices)
                 {
-                    uint idSommet = GetVertexId(edge.Key,graphId);
+                    uint idSommet = GetVertexId(sommet,graphId);
                     string addSommet = "INSERT INTO EtapeTournee(tournee_id,numero_ordre,sommet_id) VALUES(@id,@order,@vertexid)";
                     using (MySqlCommand cmdAddSommet = new MySqlCommand(addSommet, _connexion))
                     {
