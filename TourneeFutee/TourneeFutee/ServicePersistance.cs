@@ -123,6 +123,7 @@ namespace TourneeFutee
                         try
                         {
                             weight = g.GetEdgeWeight(sommet1.Key, sommet2.Key);
+
                             ajouterArc = "INSERT INTO Arc(graphe_id,sommet_source,sommet_dest,poids) VALUES(@id, @source, @dest, @weight);";
                             using (MySqlCommand cmdAjtArc = new MySqlCommand(ajouterArc, _connexion))
                             {
@@ -132,18 +133,13 @@ namespace TourneeFutee
                                 cmdAjtArc.Parameters.AddWithValue("@weight", weight);
                                 cmdAjtArc.ExecuteNonQuery();
                             }
-
                         }
                         catch (ArgumentException)
                         {
-
+                            
                         }
                     }
                 }
-            }
-            catch (Exception e) 
-            { 
-                throw; 
             }
             finally 
             { 
@@ -192,7 +188,7 @@ namespace TourneeFutee
 
                 // ajouter les sommets
                 Dictionary<uint, string> vertexNames = new Dictionary<uint, string>();
-                string getVertices = @"SELECT id, nom, valeur FROM Sommet WHERE graphe_id = @id ORDER BY id";
+                string getVertices = "SELECT id, nom, valeur FROM Sommet WHERE graphe_id = @id ORDER BY id";
                 using (MySqlCommand cmd = new MySqlCommand(getVertices, _connexion))
                 {
                     cmd.Parameters.AddWithValue("@id", id);
@@ -225,26 +221,27 @@ namespace TourneeFutee
                     {
                         while (reader.Read())
                         {
+                            
                             uint sourceId = Convert.ToUInt32(reader["sommet_source"]);
                             uint destId = Convert.ToUInt32(reader["sommet_dest"]);
                             float poids = Convert.ToSingle(reader["poids"]);
-                            string sourceName = vertexNames[sourceId];
-                            string destName = vertexNames[destId];
-                            g.AddEdge(sourceName, destName, poids);
+                            if (g.Directed || destId<sourceId)
+                            {
+                                string sourceName = vertexNames[sourceId];
+                                string destName = vertexNames[destId];
+                                g.AddEdge(sourceName, destName, poids);
+                            }
                         }
                     }
                 }
                 
                 return g;
             }
-            catch (Exception)
-            {
-                throw new NotImplementedException("LoadGraph non implémenté.");
-            }       
             finally
             {
                 _connexion.Close();
             }
+            throw new NotImplementedException("LoadGraph non implémenté.");
         }
                 
 
@@ -267,7 +264,13 @@ namespace TourneeFutee
             //
             // Attention : conserver l'ordre des étapes est essentiel pour
             //             pouvoir reconstruire la tournée fidèlement au chargement.
+            string addTour = "INSERT INTO Tournee(graphe_id, cout_total) VALUES (@id, @cost);";
+            using (MySqlCommand cmdAddTour = new MySqlCommand(addTour, _connexion))
+            {
+                cmdAddTour.Parameters.AddWithValue("@id", graphId);
+                cmdAddTour.Parameters.AddWithValue("@cost", t.Cost);
 
+            }
             throw new NotImplementedException("SaveTour non implémenté.");
         }
 
